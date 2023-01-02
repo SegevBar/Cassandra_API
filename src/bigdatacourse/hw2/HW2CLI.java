@@ -4,7 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.util.Scanner;
-import bigdatacourse.hw2.studentcode.HW2Solution;
+import bigdatacourse.hw2.studentcode.HW2StudentAnswer;
 
 
 
@@ -34,11 +34,10 @@ public class HW2CLI {
 	private String 		pathAstraDBFolder;		// with the "Secure Connect Bundle" and GeneratedToken.csv
 	private String 		pathDatasetFolder;		// the dataset folder
 	private HW2API		hw2API;					// will contain student answers
-	
-	
+
+
 	public HW2CLI() {
-//		this.hw2API				=	new HW2StudentAnswer();
-		this.hw2API				=	new HW2Solution();
+		this.hw2API				=	new HW2StudentAnswer();
 	}
 
 
