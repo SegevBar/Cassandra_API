@@ -52,68 +52,68 @@ public class CassandraExample {
 	public static void test() {
 		// creating the session
 		CqlSession session = getCassandraSession(
-			"/Users/boim/Documents/astradb.zip",		// secure connect bundle path, change the path
-			"clientID",									// found in GeneratedToken.csv
-			"clientSecret",								// found in GeneratedToken.csv
+			"/Users/Segev/OneDrive/מסמכים/סמסטר ז/ביג דאטה/תרגילים/תרגיל 2/astradb/astradb.zip",		// secure connect bundle path, change the path
+			"sidAxlEZSQaRxTUUZsQWBQsR",									// found in GeneratedToken.csv
+			"uf1kQwU+NsTo_wOJw.hDaOw26xay6snE_9FeZFTg3oNWgmH4xQMa+zlZkQ-O2oAfHS4GI0sFlZIedSL5,YeKKTWjX6bj-WGH9Bx5ae2,EglLPFW4QTB_n0JY+GiCsI-,",								// found in GeneratedToken.csv
 			"bigdatacourse");
 
 	
 		// creating the table
-		exampleCreateTable(session);
+//		exampleCreateTable(session);
 
 //		// creating the prepared statements
 		PreparedStatement pstmtAdd 		= 	session.prepare(CQL_USER_VIEW_INSERT);
 		PreparedStatement pstmtSelect 	= 	session.prepare(CQL_USER_VIEW_SELECT);
-	
-		// insert examples
+//	
+//		// insert examples
 		long user_id 	= 	123;
 		long ts			=	System.currentTimeMillis();
 		long video_id	=	555444;
 		String device	=	"iPhone";
 		int duration	=	184;
-		
-		// insert #1
-		exampleInsertVer1(session, user_id, ts, video_id, device, duration);
-		System.out.println("exampleInsertVer1 - complete");
+//		
+//		// insert #1
+//		exampleInsertVer1(session, user_id, ts, video_id, device, duration);
+//		System.out.println("exampleInsertVer1 - complete");
 		
 		// insert #1 string syntax problem (and query injection)
-		device = "iP'hone";
-		System.out.println("exampleInsertVer1 - BUG");
-		exampleInsertVer1(session, user_id, ts, video_id, device, duration);
+//		device = "iP'hone";
+//		System.out.println("exampleInsertVer1 - BUG");
+//		exampleInsertVer1(session, user_id, ts, video_id, device, duration);
 		
 		
 		// insert #2
-		device = "iP'hone";
-		exampleInsertVer2(session, user_id, ts, video_id, device, duration);
-		System.out.println("exampleInsertVer2 - complete");
+//		device = "iP'hone";
+//		exampleInsertVer2(session, user_id, ts, video_id, device, duration);
+//		System.out.println("exampleInsertVer2 - complete");
 		
-		// insert #3
-		exampleInsertVer3(session, pstmtAdd, user_id, ts, video_id, device, duration, false);
-		System.out.println("exampleInsertVer3 - complete");
-		
-		// insert - speed comparison
-		exampleInsertSpeed(session, pstmtAdd, user_id, ts, video_id, device, duration);
-		System.out.println("exampleInsertSpeed - complete");
+//		// insert #3
+//		exampleInsertVer3(session, pstmtAdd, user_id, ts, video_id, device, duration, false);
+//		System.out.println("exampleInsertVer3 - complete");
+//		
+//		// insert - speed comparison
+//		exampleInsertSpeed(session, pstmtAdd, user_id, ts, video_id, device, duration);
+//		System.out.println("exampleInsertSpeed - complete");
+//
+//		// insert - speed comparison (threads)
+//		try {
+//			exampleInsertSpeedThreads(session, pstmtAdd, user_id, ts, video_id, device, duration);
+//		} catch (InterruptedException e) {
+//			e.printStackTrace();
+//		}
+//		System.out.println("exampleInsertSpeedThreads - complete");
+//		
+//		// insert - speed comparison (async)
+//		exampleInsertSpeedAsync(session, pstmtAdd, user_id, ts, video_id, device, duration);
+//		System.out.println("exampleInsertSpeedAsync - complete (NOTE - some may be dropped due to AstraDB limits");
+//		
+//		// select #1
+//		exampleSelectVer1(session, user_id);
+//		System.out.println("exampleSelectVer1 - complete");
 
-		// insert - speed comparison (threads)
-		try {
-			exampleInsertSpeedThreads(session, pstmtAdd, user_id, ts, video_id, device, duration);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-		System.out.println("exampleInsertSpeedThreads - complete");
-		
-		// insert - speed comparison (async)
-		exampleInsertSpeedAsync(session, pstmtAdd, user_id, ts, video_id, device, duration);
-		System.out.println("exampleInsertSpeedAsync - complete (NOTE - some may be dropped due to AstraDB limits");
-		
-		// select #1
-		exampleSelectVer1(session, user_id);
-		System.out.println("exampleSelectVer1 - complete");
-
-		// select #2
-		exampleSelectVer2(session, pstmtSelect, user_id);
-		System.out.println("exampleSelectVer2 - complete");
+//		// select #2
+//		exampleSelectVer2(session, pstmtSelect, user_id);
+//		System.out.println("exampleSelectVer2 - complete");
 
 		// closing the session
 		session.close();
