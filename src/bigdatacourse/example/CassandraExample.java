@@ -103,9 +103,9 @@ public class CassandraExample {
 //		}
 //		System.out.println("exampleInsertSpeedThreads - complete");
 //		
-//		// insert - speed comparison (async)
-//		exampleInsertSpeedAsync(session, pstmtAdd, user_id, ts, video_id, device, duration);
-//		System.out.println("exampleInsertSpeedAsync - complete (NOTE - some may be dropped due to AstraDB limits");
+		// insert - speed comparison (async)
+		exampleInsertSpeedAsync(session, pstmtAdd, user_id, ts, video_id, device, duration);
+		System.out.println("exampleInsertSpeedAsync - complete (NOTE - some may be dropped due to AstraDB limits");
 //		
 //		// select #1
 //		exampleSelectVer1(session, user_id);

@@ -1,11 +1,27 @@
 package bigdatacourse.hw2.studentcode;
 
+import java.io.File;
+import java.io.*;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.datastax.oss.driver.api.core.CqlSession;
+import com.datastax.oss.driver.api.core.cql.BoundStatement;
+import com.datastax.oss.driver.api.core.cql.PreparedStatement;
 
 import bigdatacourse.hw2.HW2API;
 
@@ -15,14 +31,74 @@ public class HW2StudentAnswer implements HW2API{
 	public static final String		NOT_AVAILABLE_VALUE 	=		"na";
 
 	// CQL stuff
-	//TODO: add here create table and query designs 
+	private static final String		TABLE_PRODUCTS = "products";
+	private static final String		TABLE_USER_REVIEW = "user_review";
+	private static final String		TABLE_PRODUCT_REVIEW = "product_review";
+	
+	private static final String		CQL_CREATE_TABLE_PRODUCTS = 
+			"CREATE TABLE " + TABLE_PRODUCTS 	+"(" 		+ 
+				"asin text,"			+
+				"title text,"				+
+				"image text,"			+
+				"categories SET<text>,"				+
+				"description text,"				+
+				"PRIMARY KEY ((asin), title)"	+
+			") ";
+	
+	private static final String		CQL_CREATE_TABLE_USER_REVIEW = 
+			"CREATE TABLE " + TABLE_USER_REVIEW 	+"(" 		+ 
+				"reviewerID text,"			+
+				"time timestamp,"				+
+				"asin text,"			+
+				"reviewerName text,"				+
+				"rating float,"				+
+				"summary text,"				+
+				"reviewText text,"				+
+				"PRIMARY KEY ((reviewerID), time, asin)"	+
+			") "						+
+			"WITH CLUSTERING ORDER BY (time DESC, asin ASC)";
+	
+	private static final String		CQL_CREATE_TABLE_PRODUCT_REVIEW = 
+			"CREATE TABLE " + TABLE_PRODUCT_REVIEW 	+"(" 		+ 
+				"asin text,"			+
+				"time timestamp,"				+
+				"reviewerID text,"			+
+				"reviewerName text,"				+
+				"rating float,"				+
+				"summary text,"				+
+				"reviewText text,"				+
+				"PRIMARY KEY ((asin), time, reviewerID)"	+
+			") "						+
+			"WITH CLUSTERING ORDER BY (time DESC, reviewerID ASC)";
+	
+	private static final String		CQL_PRODUCTS_INSERT = 
+			"INSERT INTO " + TABLE_PRODUCTS + "(asin, title, image, categories, description) VALUES(?, ?, ?, ?, ?)";
+
+	private static final String		CQL_PRODUCTS_SELECT = 
+			"SELECT * FROM " + TABLE_PRODUCTS + " WHERE asin = ?";
+	
+	private static final String		CQL_USER_REVIEW_INSERT = 
+			"INSERT INTO " + TABLE_USER_REVIEW + "(reviewerID, time, asin, reviewerName, rating, summary, reviewText) VALUES(?, ?, ?, ?, ?, ?, ?)";
+
+	private static final String		CQL_USER_REVIEW_SELECT = 
+			"SELECT * FROM " + TABLE_USER_REVIEW + " WHERE reviewerID = ?";
+	
+	private static final String		CQL_PRODUCT_REVIEW_INSERT = 
+			"INSERT INTO " + TABLE_PRODUCT_REVIEW + "(asin, time, reviewerID, reviewerName, rating, summary, reviewText) VALUES(?, ?, ?, ?, ?, ?, ?)";
+
+	private static final String		CQL_PRODUCT_REVIEW_SELECT = 
+			"SELECT * FROM " + TABLE_PRODUCT_REVIEW + " WHERE asin = ?";
 	
 	// cassandra session
 	private CqlSession session;
 	
 	// prepared statements
-	//TODO: add here prepared statements variables
-	
+	PreparedStatement pstmtAddProduct;
+	PreparedStatement pstmtSelectProduct;
+	PreparedStatement pstmtAddUserReview;
+	PreparedStatement pstmtSelectUserReview;
+	PreparedStatement pstmtAddProductReview;
+	PreparedStatement pstmtSelectProductReview;
 	
 	@Override
 	public void connect(String pathAstraDBBundleFile, String username, String password, String keyspace) {
@@ -59,20 +135,85 @@ public class HW2StudentAnswer implements HW2API{
 	
 	@Override
 	public void createTables() {
-		//TODO: implement this function
-		System.out.println("TODO: implement this function...");
+		session.execute(CQL_CREATE_TABLE_PRODUCTS);
+		System.out.println("created table: " + TABLE_PRODUCTS);
+		
+		session.execute(CQL_CREATE_TABLE_USER_REVIEW);
+		System.out.println("created table: " + TABLE_USER_REVIEW);
+		
+		session.execute(CQL_CREATE_TABLE_PRODUCT_REVIEW);
+		System.out.println("created table: " + TABLE_PRODUCT_REVIEW);
 	}
 
 	@Override
 	public void initialize() {
-		//TODO: implement this function
-		System.out.println("TODO: implement this function...");
+		pstmtAddProduct 	= 	session.prepare(CQL_PRODUCTS_INSERT);
+		pstmtSelectProduct 	= 	session.prepare(CQL_PRODUCTS_SELECT);
+		pstmtAddUserReview 	= 	session.prepare(CQL_USER_REVIEW_INSERT);
+		pstmtSelectUserReview 	= 	session.prepare(CQL_USER_REVIEW_SELECT);
+		pstmtAddProductReview 	= 	session.prepare(CQL_PRODUCT_REVIEW_INSERT);
+		pstmtSelectProductReview 	= 	session.prepare(CQL_PRODUCT_REVIEW_SELECT);
+		
+		System.out.println("Prepered all Prepared Statements");
 	}
-
+	
+	private class Item {
+		private String asin;
+		private String title;
+		private String image;
+		private Set<String> categories;
+		private String description;
+	}
+	
+	private Set<String> convertJSONArrToSet(JSONArray arr) {
+		Set<String> set = new TreeSet<>();
+		
+		for (int i = 0; i < arr.length();  i++) {
+			String str = String.valueOf(arr.get(i));
+			Pattern pattern = Pattern.compile("\".*?\"");
+			Matcher matcher = pattern.matcher(str);
+			while (matcher.find()) {
+				set.add(matcher.group());
+			}
+		}
+		return set;
+	}
+	
 	@Override
 	public void loadItems(String pathItemsFile) throws Exception {
-		//TODO: implement this function
-		System.out.println("TODO: implement this function...");
+		int maxThreads	= 250;
+		String line;
+		
+		// creating the thread factors
+		ExecutorService executor = Executors.newFixedThreadPool(maxThreads);
+		
+		BufferedReader bufferedReader = new BufferedReader(new FileReader(new File(pathItemsFile)));
+		while ((line = bufferedReader.readLine()) != null) {
+			JSONObject currentObject = new JSONObject(line);
+			Item item = new Item();
+			
+			item.asin = currentObject.has("asin") ? currentObject.getString("asin") : NOT_AVAILABLE_VALUE;
+			item.title = currentObject.has("title") ? currentObject.getString("title") : NOT_AVAILABLE_VALUE;
+			item.image = currentObject.has("image") ? currentObject.getString("image") : NOT_AVAILABLE_VALUE;
+			item.categories = currentObject.has("categories") ? convertJSONArrToSet(currentObject.getJSONArray("categories")) : new TreeSet<String>();
+			item.description = currentObject.has("description") ? currentObject.getString("description") : NOT_AVAILABLE_VALUE;
+
+			executor.execute(new Runnable() {
+				@Override
+				public void run() {
+					BoundStatement bstmtAddProduct = pstmtAddProduct.bind()
+							.setString(0, item.asin)
+							.setString(1, item.title)
+							.setString(2, item.image)
+							.setSet(3, item.categories, String.class)
+							.setString(4, item.description);
+					session.execute(bstmtAddProduct);
+				}
+			});
+		}
+		bufferedReader.close();
+		executor.shutdown();
+		executor.awaitTermination(1, TimeUnit.HOURS);
 	}
 
 	@Override
